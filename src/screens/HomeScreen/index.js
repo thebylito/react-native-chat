@@ -1,41 +1,64 @@
 import React from 'react';
-import {Platform, StyleSheet, Text, View} from 'react-native';
+import { View } from 'react-native';
+import { GiftedChat } from 'react-native-gifted-chat';
+import { socket } from './../../config/socket';
 
-const instructions = Platform.select({
-  ios: 'Press Cmd+R to reload,\n' + 'Cmd+D or shake for dev menu',
-  android:
-    'Double tap R on your keyboard to reload,\n' +
-    'Shake or press menu button for dev menu',
-});
+export default class HomeScreen extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      messages: [],
+      username: 'thebylito'+ Math.random(),
+      userId: 'asfasfasgasasfd78'+ Math.random(),
+    };
+    this.socket = socket;
 
 
-export default class HomeScreen extends React.Component{
+    this.onSend = this.onSend.bind(this);
+    
+    this.socket.on('message', this.onReceivedMessage);
+    this.socket.on('update', this.onUpdate);
+    this.socket.on;
+  }
+  onReceivedMessage = (messages) => {
+    this._storeMessages(messages);
+  };
+  onUpdate = (update) => {
+    console.log(update);
+  };
+  componentDidMount = () => {
+    const { username } = this.state;
+    this.socket.emit('join', username);
+  };
+
+  onSend = (messages) => {
+    this.socket.emit('message', messages[0]);
+    this._storeMessages(messages);
+  };
+
+  _storeMessages(messages) {
+    console.log(messages);
+    this.setState((previousState) => {
+      return {
+        messages: GiftedChat.append(previousState.messages, messages),
+      };
+    });
+  }
+
+  setNome(nome) {
+    this.socket.emit('set_username', { nome });
+  }
+
   render() {
+    const { username, userId } = this.state;
     return (
-      <View style={styles.container}>
-        <Text style={styles.welcome}>Welcome to React Native!</Text>
-        <Text style={styles.instructions}>To get started, edit App.js</Text>
-        <Text style={styles.instructions}>{instructions}</Text>
+      <View style={{ flex: 1 }}>
+        <GiftedChat
+          messages={this.state.messages}
+          onSend={(messages) => this.onSend(messages)}
+          user={{ _id: userId, name: username, user:username }}
+        />
       </View>
     );
   }
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F5FCFF',
-  },
-  welcome: {
-    fontSize: 20,
-    textAlign: 'center',
-    margin: 10,
-  },
-  instructions: {
-    textAlign: 'center',
-    color: '#333333',
-    marginBottom: 5,
-  },
-});
